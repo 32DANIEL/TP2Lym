@@ -1,0 +1,95 @@
+using gold.**
+procedure main(args:String[]) begin
+	/* Universidad de los Andes
+	 * Daniel Rudas
+	 * Decoder
+	 * Lee una cadena del tipo
+	 * w1xw2x‥.wn$ where wn ∈ ('0'‥'9')+
+	 * Donde se encuentra un mensaje donde
+	 * wn = mn
+	 * y mn esta dado por
+	 * mn = (mn*k(n mod 4) +1, p(n mod 4) +1)
+	 * donde mn* es la sumatoria de los digitos dentro de wn.
+	 * k y p son elegidas previamente.
+	 * donde 1 ≤ k ≤ p
+	 * y 13 ≤ p ≤ 37
+	 * primos P elegidos = {13, 17, 19, 23}
+	 * pares ⟨ki, pi⟩
+	 * ⟨5, 17⟩
+	 * ⟨12, 23⟩
+	 * ⟨6, 29⟩
+	 * ⟨7, 31⟩
+	 */
+	Q := {⟨p, k, i⟩ | p in {13, 17, 19, 23}, 0 <= k < p, i in (1‥4)} ∪ {"ERR", "FIN"}
+	Σ := {'x', '$'} ∪ ('0'‥'9')
+	Σ´:= ('0'‥'9')∪{'-'}
+	q₀ := ⟨13, 0, 1⟩
+	F := {"FIN"}
+	Transducer:ITransducer := GDeterministicTransducer(Q,Σ,Σ´,q₀,F,δ,g,h)
+	GAutomataFrame.show(Transducer)
+end
+
+function δ(State, Input) begin
+	if State[0] = 13 then
+		if Input in ('0'‥'9') then
+			number := Integer.valueOf(String.valueOf(Input))
+			return ⟨State[0], (State[1] + number) % State[0] , 1⟩
+		elseif Input = 'x' then
+			return ⟨17, 0 , 2⟩
+		elseif Input = '$' then
+			return "FIN"
+		end
+	elseif State[0] = 17 then
+		if Input in ('0'‥'9') then
+			number := Integer.valueOf(String.valueOf(Input))
+			return ⟨State[0], (State[1] + number)%State[0] ,State[2]⟩
+		elseif Input = 'x' then
+			return ⟨19, 0,3⟩
+		elseif Input = '$' then
+			return "FIN"
+		end
+	elseif State[0] = 19 then
+		if Input in ('0'‥'9') then
+			number := Integer.valueOf(String.valueOf(Input))
+			return ⟨State[0], (State[1] + number) % State[0], State[2]⟩
+		elseif Input = 'x'  then
+			return ⟨23, 0, 4⟩
+		elseif Input = '$' then
+			return "FIN"
+		end
+	elseif State[0] = 23 then
+		if Input in ('0'‥'9') then
+			number := Integer.valueOf(String.valueOf(Input))
+			return ⟨State[0], (State[1] + number) % State[0],State[2]⟩
+		elseif Input = 'x' then
+			return ⟨13, 0,1⟩
+		elseif Input = '$' then
+			return "FIN"
+		end
+	end
+	return "ERR"
+end
+
+function h(State, input) begin
+	k:= 0
+	if State[0] = 13 then
+		k:=5
+	elseif State[0] = 17 then
+		k:=12
+	elseif State[0] = 19 then
+		k:=6
+	elseif State[0] = 23 then
+		k:=7
+	end
+	if input = 'x' then
+		return ((State[1]*(k*((State[2]%4)+1)))%(State[0]*((State[2]%4)+1))).toString() + '-'
+	elseif input = '$' then
+		return ((State[1]*(k*((State[2]%4)+1)))%(State[0]*((State[2]%4)+1))).toString()
+	else
+		return λ
+	end
+end
+
+function g(state) begin
+	return λ
+end
